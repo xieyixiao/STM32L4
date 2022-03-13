@@ -44,7 +44,7 @@ u8 max30102_reset(void);
 u8 max30102_Bus_Write(u8 Register_Address, u8 Word_Data);
 u8 max30102_Bus_Read(u8 Register_Address);
 void max30102_FIFO_ReadWords(u8 Register_Address,u16  Word_Data[][2],u8 count);
-void max30102_FIFO_ReadBytes(u8 Register_Address,u8* Data);
+void max30102_FIFO_ReadBytes(u8 Register_Address,u8* Data,u8 count);
 
 void maxim_max30102_write_reg(uint8_t uch_addr, uint8_t uch_data);
 void maxim_max30102_read_reg(uint8_t uch_addr, uint8_t *puch_data);

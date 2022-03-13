@@ -141,21 +141,17 @@ void max30102_FIFO_ReadWords(u8 Register_Address,u16 Word_Data[][2],u8 count)
 	while (no)
 	{
 		data1 = IIC2_Read_Byte(0);
-		IIC2_Ack();
 		data2 = IIC2_Read_Byte(0);
-		IIC2_Ack();
 		Word_Data[i][0] = (((u16)data1 << 8) | data2);  //
 
 		
 		data1 = IIC2_Read_Byte(0);
-		IIC2_Ack();
-		data2 = IIC2_Read_Byte(0);
-		if(1==no)
-			IIC2_NAck();	/* 最后1个字节读完后，CPU产生NACK信号(驱动SDA = 1) */
-		else
-			IIC2_Ack();
-		Word_Data[i][1] = (((u16)data1 << 8) | data2); 
 
+		if(1==no)
+            data2 = IIC2_Read_Byte(1);	/* 最后1个字节读完后，CPU产生NACK信号(驱动SDA = 1) */
+		else
+            data2 = IIC2_Read_Byte(0);
+		Word_Data[i][1] = (((u16)data1 << 8) | data2);
 		no--;	
 		i++;
 	}
@@ -167,8 +163,9 @@ cmd_fail: /* 命令执行失败后，切记发送停止信号，避免影响I2C总线上其他设备 */
 	IIC2_Stop();
 }
 
-void max30102_FIFO_ReadBytes(u8 Register_Address,u8* Data)
+void max30102_FIFO_ReadBytes(u8 Register_Address,u8* Data,u8 count)
 {
+    u8 i = 0;
     max30102_Bus_Read(REG_INTR_STATUS_1);
     max30102_Bus_Read(REG_INTR_STATUS_2);
 	
@@ -205,12 +202,14 @@ void max30102_FIFO_ReadBytes(u8 Register_Address,u8* Data)
 	}
 
 	/* 第9步：读取数据 */
-	Data[0] = IIC2_Read_Byte(1);
-	Data[1] = IIC2_Read_Byte(1);
-	Data[2] = IIC2_Read_Byte(1);
-	Data[3] = IIC2_Read_Byte(1);
-	Data[4] = IIC2_Read_Byte(1);
-	Data[5] = IIC2_Read_Byte(0);
+    while (count) {
+        if(count==1)
+            Data[i] = IIC2_Read_Byte(0);
+        else
+            Data[i] = IIC2_Read_Byte(1);
+        --count;
+        ++i;
+    }
 	/* 最后1个字节读完后，CPU产生NACK信号(驱动SDA = 1) */
 	/* 发送I2C总线停止信号 */
 	IIC2_Stop();
@@ -265,10 +264,10 @@ u8 max30102_init(void)
     if (max30102_Bus_Write(REG_OVF_COUNTER,0x00)==0) return 1;  	//OVF_COUNTER[4:0]
     if (max30102_Bus_Write(REG_FIFO_RD_PTR,0x00)==0) return 1;  	//FIFO_RD_PTR[4:0]
     if (max30102_Bus_Write(REG_FIFO_CONFIG,0x0f)==0) return 1;  	//sample avg = 1, fifo rollover=false, fifo almost full = 17
-    if (max30102_Bus_Write(REG_MODE_CONFIG,0x03)==0) return 1;  	//0x02 for Red only, 0x03 for SpO2 mode 0x07 multimode LED
+    if (max30102_Bus_Write(REG_MODE_CONFIG,0x02)==0) return 1;  	//0x02 for Red only, 0x03 for SpO2 mode 0x07 multimode LED
     if (max30102_Bus_Write(REG_SPO2_CONFIG,0x27)==0) return 1;  	// SPO2_ADC range = 4096nA, SPO2 sample rate (100 Hz), LED pulseWidth (400uS)
     if (max30102_Bus_Write(REG_LED1_PA,0x24)==0) return 1;   	//Choose value for ~ 7mA for LED1
-    if (max30102_Bus_Write(REG_LED2_PA,0x24)==0) return 1;   	// Choose value for ~ 7mA for LED2
+    if (max30102_Bus_Write(REG_LED2_PA,0x00)==0) return 1;   	// Choose value for ~ 7mA for LED2
     return 0;
 //    while (max30102_Bus_Write(REG_PILOT_PA,0x7f)==0);   	// Choose value for ~ 25mA for Pilot LED
 //	max30102_Bus_Read(REG_INTR_STATUS_1);
