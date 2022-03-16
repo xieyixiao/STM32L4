@@ -40,6 +40,8 @@ extern "C" {
 #include "software_iic2.h"
 #include "adxl345.h"
 #include "arm_math.h"
+#include "LMS_simu_generate.h"         /* Model's header file */
+#include "rtwtypes.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

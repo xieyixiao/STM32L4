@@ -47,6 +47,7 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef UART_Handler;
 
 /* USER CODE BEGIN PV */
 //-----------------------------------------------------------------
@@ -68,7 +69,36 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void rt_OneStep(void);
+void rt_OneStep(void)
+{
+    static boolean_T OverrunFlag = false;
 
+    /* Disable interrupts here */
+
+    /* Check for overrun */
+    if (OverrunFlag) {
+        rtmSetErrorStatus(rtM, "Overrun");
+        return;
+    }
+
+    OverrunFlag = true;
+
+    /* Save FPU context here (if necessary) */
+    /* Re-enable timer or interrupt here */
+    /* Set model inputs here */
+    /* Step the model */
+    LMS_simu_generate_step();
+
+    /* Get model outputs here */
+
+    /* Indicate task complete */
+    OverrunFlag = false;
+
+    /* Disable interrupts here */
+    /* Restore FPU context here (if necessary) */
+    /* Enable interrupts here */
+}
 /* USER CODE END 0 */
 
 /**
@@ -82,14 +112,16 @@ int main(void)
     u32 ch2_data;
     u8 read_data[9];
     u8 temp[6];
-    u32 data[2] = {0};
+    u32 data[2] ={0};
+    u8 hr = 0;
+    u8 bp = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+  LMS_simu_generate_initialize();
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -114,11 +146,11 @@ int main(void)
     ADS1292_PowerOnInit();						 // ADS1292上电初始化
     ADXL345_init();
 
-    /*while (max30102_init()){
+    while (max30102_init()){
         printf("max30102 inint failed");
         delay_ms(20);
     };
-    printf("max30102 inint");*/
+    printf("max30102 inint");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,50 +159,64 @@ int main(void)
   {
     /* USER CODE END WHILE */
       ch1_data = 0;										 // 通道1数据
-      ch2_data = 0;										 // 通道2数据
+      ch2_data = 0;								 // 通道2数据
+      u8 *d1 = NULL;
+      u8 m = 0;
       // read_data：24 status bits + 24 bits × 2 channels
       ADS1292_Read_Data(read_data);
 
       // 计算ADS1292R通道1的数据-呼吸测量数据
       ch1_data |= (uint32_t)read_data[3] << 16;
       ch1_data |= (uint32_t)read_data[4] << 8;
-      ch1_data |= (uint32_t)read_data[5] << 0;
+      ch1_data |= (uint32_t)read_data[5];
 
       // 计算ADS1292R通道2的数据-心电图数据
       ch2_data |= (uint32_t)read_data[6] << 16;
       ch2_data |= (uint32_t)read_data[7] << 8;
-      ch2_data |= (uint32_t)read_data[8] << 0;
+      ch2_data |= (uint32_t)read_data[8];
 
       // 得到的数据是补码，需要进行数据转换
       ch1_data^=0x800000;
       ch2_data^=0x800000;
-      u8 *d1 = NULL;
-      int i = 0;
+      ch2_data&=0xffff;
 //      d1 = (u8*)&ch1_data;
 //      while (i--){
 //          USART1->TDR = *(d1++);
 //          delay_us(10);
 //      }
+//      printf("\r\n");
 
-
-      i = 4;
-      d1 = (u8*)&ch2_data;
-      while (i--){
-          USART1->TDR = *(d1++);
-      }
-      printf("\r\n");
-
-
-//      printf("%d%d",ch1_data^0x800000, ch2_data^0x800000);
+//      printf("A: %8d,%8d\r\n",ch1_data^0x800000, ch2_data^0x800000);
 //      ADXL345_main();
 //      printf("\r\n");
 //      delay_ms(10);
-     /* while (MAX30102_INT_Read()) ;
-      max30102_FIFO_ReadBytes(REG_FIFO_DATA,temp);
-      data[0] =  ((temp[0]<<16 | temp[1]<<8 | temp[2])&0x03ffff);
-      data[1] = ((temp[3]<<16 | temp[4]<<8 | temp[5])&0x03ffff);
-      printf("A: %8d,%8d\r\n",data[0],data[1]);*/
+      while (MAX30102_INT_Read()) ;
+      max30102_FIFO_ReadBytes(REG_FIFO_DATA,temp,6);
+      for (int i = 0; i < 1; ++i) {
+          u32 base = 6*i;
+          data[0] = ((temp[base] << 16 | temp[base+1] << 8 | temp[base+2]) & 0x03ffff);
+//        data[1] = ((temp[base+3] << 16 | temp[base+4] << 8 | temp[base+5]) & 0x03ffff);
+          data[0] = (-data[0])&0x0ffff;
 
+//          printf(",%8d,%8d\r\n", (-data[0])&0x03ffff, (-data[1])&0x03ffff);
+      }
+      rtU.In1 = ch2_data;
+      rtU.In2 = data[0];
+      rt_OneStep();
+      hr = rtY.Out1;
+      bp = rtY.Out2;
+      printf("HR=%d,BP=%d",hr,bp);
+//      m = 4;
+//      d1 = (u8*)&ch2_data;
+//      while (m--){
+//          HAL_UART_Transmit(&UART_Handler,d1++,1,1000);
+//      }
+     /* m = 4;
+      d1 = (u8*)&data[0];
+      while (m--){
+          HAL_UART_Transmit(&UART_Handler,d1++,1,1000);
+      }*/
+      printf("\r\n");
   }
   /* USER CODE BEGIN 3 */
 

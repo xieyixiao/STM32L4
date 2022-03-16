@@ -106,7 +106,7 @@ void ADS1292_PowerOnInit(void)
     delay_us(10);
   ADS1292_Write_Reg(WREG | CONFIG2,  0XE0); // 使用内部参考电压
   delay_ms(10);                            	// 等待内部参考电压稳定
-  ADS1292_Write_Reg(WREG | CONFIG1,  0X03); // 设置转换速率为1KSPS
+  ADS1292_Write_Reg(WREG | CONFIG1,  0X02); // 设置转换速率为500SPS
   delay_us(10);
   ADS1292_Write_Reg(WREG | LOFF,     0XF0);	// 该寄存器配置引出检测操作
   delay_us(10);
