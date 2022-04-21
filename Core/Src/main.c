@@ -41,7 +41,8 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
-
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
@@ -62,6 +63,8 @@ static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_DMA_Init(void);
+static void MX_ADC1_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -115,6 +118,9 @@ int main(void)
     u32 data[2] ={0};
     u8 hr = 0;
     u8 bp = 0;
+    u8 pr = 0;
+    u16 ad_buf;
+    float temperature;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -128,24 +134,30 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
-
   /* USER CODE BEGIN SysInit */
   SysTick_clkconfig(80);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  bsp_Lmt70Init();
 //  MX_I2C1_Init();
 //  MX_I2C2_Init();
 //  MX_SPI1_Init();
 //  MX_USART2_UART_Init();
 //  MX_TIM2_Init();
+
+//配置DMA ADC
+    MX_DMA_Init();
+    MX_ADC1_Init();
+    HAL_ADCEx_Calibration_Start(&hadc1,ADC_SINGLE_ENDED);
   /* USER CODE BEGIN 2 */
     uart_init(115200);
-    ADS1292_Init();	// ADS1292寮曡剼鍒濆鍖?
+    ADS1292_Init();	// ADS1292R初始化
     ADS1292_PowerOnInit();						 // ADS1292上电初始化
     ADXL345_init();
-
+    bsp_Lmt70Enable();
+    HAL_ADC_Start_DMA(&hadc1,&ad_buf,1);
     while (max30102_init()){
         printf("max30102 inint failed");
         delay_ms(20);
@@ -158,6 +170,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+    //ads1292R
       ch1_data = 0;										 // 通道1数据
       ch2_data = 0;								 // 通道2数据
       u8 *d1 = NULL;
@@ -176,46 +189,61 @@ int main(void)
       ch2_data |= (uint32_t)read_data[8];
 
       // 得到的数据是补码，需要进行数据转换
+      //      printf("A: %8d,%8d\r\n",ch1_data^0x800000, ch2_data^0x800000);
       ch1_data^=0x800000;
       ch2_data^=0x800000;
       ch2_data&=0xffff;
+
+
+      //呼吸信号
 //      d1 = (u8*)&ch1_data;
-//      while (i--){
-//          USART1->TDR = *(d1++);
-//          delay_us(10);
-//      }
+//      HAL_UART_Transmit(&UART_Handler,d1,2,1000);
 //      printf("\r\n");
 
-//      printf("A: %8d,%8d\r\n",ch1_data^0x800000, ch2_data^0x800000);
-//      ADXL345_main();
-//      printf("\r\n");
-//      delay_ms(10);
+    //ADXL345
+      /*short x, y, z;
+      ADXL345_read_times(&x, &y, &z, 1); //读出x，y，z方向加速度值*/
+
+      /*printf("x %d\n", x);
+      printf("y %d\n", y);
+      printf("z %d\n", z);*/
+
+    //max30102
       while (MAX30102_INT_Read()) ;
       max30102_FIFO_ReadBytes(REG_FIFO_DATA,temp,6);
-      for (int i = 0; i < 1; ++i) {
-          u32 base = 6*i;
-          data[0] = ((temp[base] << 16 | temp[base+1] << 8 | temp[base+2]) & 0x03ffff);
-//        data[1] = ((temp[base+3] << 16 | temp[base+4] << 8 | temp[base+5]) & 0x03ffff);
-          data[0] = (-data[0])&0x0ffff;
-
+      data[0] = ((temp[0] << 16 | temp[1] << 8 | temp[2]) & 0x03ffff);
+      data[1] = ((temp[3] << 16 | temp[4] << 8 | temp[5]) & 0x03ffff);
+      data[0] = (-data[0])&0xffff;
 //          printf(",%8d,%8d\r\n", (-data[0])&0x03ffff, (-data[1])&0x03ffff);
+
+
+    //LMT70
+      if(bsp_ReadLmt70TemperatureInFloat(&temperature,ad_buf)==0){
+          printf("%f",temperature);
       }
+    /*  //model
       rtU.In1 = ch2_data;
       rtU.In2 = data[0];
       rt_OneStep();
       hr = rtY.Out1;
       bp = rtY.Out2;
-      printf("HR=%d,BP=%d",hr,bp);
-//      m = 4;
-//      d1 = (u8*)&ch2_data;
-//      while (m--){
-//          HAL_UART_Transmit(&UART_Handler,d1++,1,1000);
-//      }
-     /* m = 4;
+      pr = rtY.Out3;
+      printf("HR=%d,BP=%d PR=%d",hr,bp,pr);*/
+
+    //simulink
+    //心电信号
+
+   /*   d1 = (u8*)&ch2_data;
+      HAL_UART_Transmit(&UART_Handler,d1,4,1000);
+      //PPG信号
+
       d1 = (u8*)&data[0];
-      while (m--){
-          HAL_UART_Transmit(&UART_Handler,d1++,1,1000);
-      }*/
+      HAL_UART_Transmit(&UART_Handler,d1,4,1000);*/
+
+    //加速度信号
+    /*  HAL_UART_Transmit(&UART_Handler,&x,2,1000);
+      HAL_UART_Transmit(&UART_Handler,&y,2,1000);
+      HAL_UART_Transmit(&UART_Handler,&z,2,1000);*/
       printf("\r\n");
   }
   /* USER CODE BEGIN 3 */
@@ -268,6 +296,83 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
+
+
+static void MX_ADC1_Init(void)
+{
+
+    /* USER CODE BEGIN ADC1_Init 0 */
+
+    /* USER CODE END ADC1_Init 0 */
+
+    ADC_MultiModeTypeDef multimode = {0};
+    ADC_ChannelConfTypeDef sConfig = {0};
+
+    /* USER CODE BEGIN ADC1_Init 1 */
+
+    /* USER CODE END ADC1_Init 1 */
+    /** Common config
+    */
+    hadc1.Instance = ADC1;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV8;
+    hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+    hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    hadc1.Init.LowPowerAutoWait = DISABLE;
+    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.NbrOfConversion = 1;
+    hadc1.Init.DiscontinuousConvMode = DISABLE;
+    hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hadc1.Init.DMAContinuousRequests = ENABLE;
+    hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    hadc1.Init.OversamplingMode = DISABLE;
+    if (HAL_ADC_Init(&hadc1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /** Configure the ADC multi-mode
+    */
+    multimode.Mode = ADC_MODE_INDEPENDENT;
+    if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /** Configure Regular Channel
+    */
+    sConfig.Channel = ADC_CHANNEL_1;
+    sConfig.Rank = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+    sConfig.SingleDiff = ADC_SINGLE_ENDED;
+    sConfig.OffsetNumber = ADC_OFFSET_NONE;
+    sConfig.Offset = 0;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN ADC1_Init 2 */
+
+    /* USER CODE END ADC1_Init 2 */
+
+}
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+    /* DMA controller clock enable */
+    __HAL_RCC_DMA1_CLK_ENABLE();
+
+    /* DMA interrupt init */
+    /* DMA1_Channel1_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+
 
 /**
   * @brief I2C1 Initialization Function
@@ -503,11 +608,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PC1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  /*GPIO_InitStruct.Pin = GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_1,SET);*/
 
   /*Configure GPIO pins : PB0 PB1 PB12 PB13
                            PB14 */

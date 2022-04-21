@@ -108,7 +108,7 @@ void ADXL345_read_times(short *x, short *y, short *z, u8 times)
         *y += ty;
         *z += tz;
 
-        delay_ms(5);
+        delay_ms(1);
     }
 
     *x /= times; //求平均
@@ -145,7 +145,7 @@ short ADXL345_get_result(float x, float y, float z, u8 dir) //计算角度
 void ADXL345_main()
 {
     short x, y, z;
-     volatile short rx, ry, rz;
+    short rx, ry, rz;
 
     ADXL345_read_times(&x, &y, &z, 10); //读出x，y，z方向加速度值
     printf("x %d\n", x);
