@@ -119,7 +119,7 @@ int main(void)
     u8 hr = 0;
     u8 bp = 0;
     u8 pr = 0;
-    u16 ad_buf;
+    u16 ad_buf[10];
     float temperature;
   /* USER CODE END 1 */
 
@@ -150,6 +150,7 @@ int main(void)
 //配置DMA ADC
     MX_DMA_Init();
     MX_ADC1_Init();
+    //校准adc
     HAL_ADCEx_Calibration_Start(&hadc1,ADC_SINGLE_ENDED);
   /* USER CODE BEGIN 2 */
     uart_init(115200);
@@ -157,7 +158,8 @@ int main(void)
     ADS1292_PowerOnInit();						 // ADS1292上电初始化
     ADXL345_init();
     bsp_Lmt70Enable();
-    HAL_ADC_Start_DMA(&hadc1,&ad_buf,1);
+    //开启DMA转换
+    HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&ad_buf,10);
     while (max30102_init()){
         printf("max30102 inint failed");
         delay_ms(20);
@@ -218,7 +220,12 @@ int main(void)
 
 
     //LMT70
-      if(bsp_ReadLmt70TemperatureInFloat(&temperature,ad_buf)==0){
+        u32 sum = 0;
+      for (int i = 0; i < 10; ++i) {
+          sum+=ad_buf[i];
+      }
+      sum/=10;
+      if(bsp_ReadLmt70TemperatureInFloat(&temperature,sum)==0){
           printf("%f",temperature);
       }
     /*  //model
@@ -245,6 +252,7 @@ int main(void)
       HAL_UART_Transmit(&UART_Handler,&y,2,1000);
       HAL_UART_Transmit(&UART_Handler,&z,2,1000);*/
       printf("\r\n");
+      HAL_Delay(1000);
   }
   /* USER CODE BEGIN 3 */
 
@@ -320,7 +328,7 @@ static void MX_ADC1_Init(void)
     hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
     hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     hadc1.Init.LowPowerAutoWait = DISABLE;
-    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.ContinuousConvMode = ENABLE;
     hadc1.Init.NbrOfConversion = 1;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;

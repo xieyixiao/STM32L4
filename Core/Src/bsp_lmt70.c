@@ -81,7 +81,7 @@ int8_t bsp_Lmt70Init(void)
 float bsp_GetTempBySecondOrderTransfer(float voltageMv)
 {
 	double temp = 0.0;
-	#if 1
+	#if 0
 	//-55℃ - 150℃ 最优曲线参数
 	temp = ((-8.451576 * pow(10,-6)) * pow(voltageMv,2)) + ((-0.1769281) * voltageMv) + 204.3937;
 	#else
