@@ -52,7 +52,7 @@ function(CMSIS_CrossCompilingConfiguration)
     set(COMPILE_RULE_FLAG "-mcpu=${CMAKE_SYSTEM_PROCESSOR} ${FPU_FLAG}")
 
     #设置C编译器选项
-    set(CMAKE_C_FLAGS_INIT " ${C_TARGET_FLAG} ${COMPILE_RULE_FLAG} -fno-rtti -c -ffunction-sections -O1 -w" CACHE STRING "global")
+    set(CMAKE_C_FLAGS_INIT " ${C_TARGET_FLAG} ${COMPILE_RULE_FLAG} -fno-rtti -c -ffunction-sections -O3 -w" CACHE STRING "global")
 
     #设置C++编译器选项
     set(CMAKE_CXX_FLAGS_INIT ${CMAKE_C_FLAGS_INIT} CACHE STRING "global")

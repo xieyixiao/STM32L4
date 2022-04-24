@@ -43,6 +43,7 @@ extern "C" {
 #include "arm_math.h"
 #include "LMS_simu_generate.h"         /* Model's header file */
 #include "rtwtypes.h"
+#include "modbus.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

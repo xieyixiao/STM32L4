@@ -3,9 +3,9 @@
  *
  * Code generated for Simulink model 'LMS_simu_generate'.
  *
- * Model version                  : 1.117
+ * Model version                  : 1.122
  * Simulink Coder version         : 9.0 (R2018b) 24-May-2018
- * C/C++ source code generated on : Wed Mar 16 13:26:07 2022
+ * C/C++ source code generated on : Sun Apr 24 21:15:05 2022
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: STMicroelectronics->STM32 32-bit Cortex-M
@@ -122,16 +122,8 @@ typedef struct {
   boolean_T objisempty;                /* '<Root>/Median Filter1' */
 } DW_MedianFilter1;
 
-/* Block signals and states (default storage) for system '<Root>/MATLAB Function1' */
-typedef struct {
-  real_T t;                            /* '<Root>/MATLAB Function1' */
-  real_T pre;                          /* '<Root>/MATLAB Function1' */
-} DW_MATLABFunction1;
-
 /* Block signals and states (default storage) for system '<Root>' */
 typedef struct {
-  DW_MATLABFunction1 sf_MATLABFunction2;/* '<Root>/MATLAB Function2' */
-  DW_MATLABFunction1 sf_MATLABFunction1;/* '<Root>/MATLAB Function1' */
   DW_MedianFilter1 MedianFilter;       /* '<Root>/Median Filter1' */
   DW_MovingAverage1 MovingAverage;     /* '<Root>/Moving Average1' */
   DW_MedianFilter1 MedianFilter1_p;    /* '<Root>/Median Filter1' */
@@ -139,6 +131,8 @@ typedef struct {
   real_T i;                            /* '<Root>/MATLAB Function4' */
   real_T t;                            /* '<Root>/MATLAB Function3' */
   real_T pre;                          /* '<Root>/MATLAB Function3' */
+  real_T t_n;                          /* '<Root>/MATLAB Function1' */
+  real_T pre_h;                        /* '<Root>/MATLAB Function1' */
   real_T i_j;                          /* '<Root>/MATLAB Function' */
   real32_T Delay1_DSTATE;              /* '<Root>/Delay1' */
   real32_T Delay_DSTATE;               /* '<Root>/Delay' */
@@ -164,9 +158,9 @@ typedef struct {
 
 /* External outputs (root outports fed by signals with default storage) */
 typedef struct {
-  uint8_T Out1;                        /* '<Root>/Out1' */
-  uint8_T Out2;                        /* '<Root>/Out2' */
-  uint8_T Out3;                        /* '<Root>/Out3' */
+  uint16_T Out1;                       /* '<Root>/Out1' */
+  uint16_T Out2;                       /* '<Root>/Out2' */
+  uint16_T Out3;                       /* '<Root>/Out3' */
 } ExtY;
 
 /* Real-time Model Data Structure */
@@ -214,9 +208,8 @@ extern RT_MODEL *const rtM;
  * '<Root>' : 'LMS_simu_generate'
  * '<S1>'   : 'LMS_simu_generate/MATLAB Function'
  * '<S2>'   : 'LMS_simu_generate/MATLAB Function1'
- * '<S3>'   : 'LMS_simu_generate/MATLAB Function2'
- * '<S4>'   : 'LMS_simu_generate/MATLAB Function3'
- * '<S5>'   : 'LMS_simu_generate/MATLAB Function4'
+ * '<S3>'   : 'LMS_simu_generate/MATLAB Function3'
+ * '<S4>'   : 'LMS_simu_generate/MATLAB Function4'
  */
 #endif                                 /* RTW_HEADER_LMS_simu_generate_h_ */
 

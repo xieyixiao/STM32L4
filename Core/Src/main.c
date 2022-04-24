@@ -44,7 +44,7 @@ I2C_HandleTypeDef hi2c2;
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 SPI_HandleTypeDef hspi1;
-
+Modbus_rtu T;
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart2;
@@ -52,6 +52,7 @@ extern UART_HandleTypeDef UART_Handler;
 
 /* USER CODE BEGIN PV */
 //-----------------------------------------------------------------
+
 
 //-------------------------------------------------
 /* USER CODE END PV */
@@ -116,9 +117,9 @@ int main(void)
     u8 read_data[9];
     u8 temp[6];
     u32 data[2] ={0};
-    u8 hr = 0;
-    u8 bp = 0;
-    u8 pr = 0;
+    uint16_t hr = 0;
+    uint16_t sbp = 0;
+    uint16_t dbp= 0;
     u16 ad_buf[10];
     float temperature;
   /* USER CODE END 1 */
@@ -129,7 +130,7 @@ int main(void)
   HAL_Init();
   LMS_simu_generate_initialize();
   /* USER CODE BEGIN Init */
-
+  Modbus_Init(&T,0x01,0x44,0x00,0x05,0x0A);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -153,7 +154,7 @@ int main(void)
     //校准adc
     HAL_ADCEx_Calibration_Start(&hadc1,ADC_SINGLE_ENDED);
   /* USER CODE BEGIN 2 */
-    uart_init(115200);
+    uart_init(9600);
     ADS1292_Init();	// ADS1292R初始化
     ADS1292_PowerOnInit();						 // ADS1292上电初始化
     ADXL345_init();
@@ -169,6 +170,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  int i = 0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -205,7 +207,6 @@ int main(void)
     //ADXL345
       /*short x, y, z;
       ADXL345_read_times(&x, &y, &z, 1); //读出x，y，z方向加速度值*/
-
       /*printf("x %d\n", x);
       printf("y %d\n", y);
       printf("z %d\n", z);*/
@@ -219,41 +220,45 @@ int main(void)
 //          printf(",%8d,%8d\r\n", (-data[0])&0x03ffff, (-data[1])&0x03ffff);
 
 
-    //LMT70
-        u32 sum = 0;
-      for (int i = 0; i < 10; ++i) {
-          sum+=ad_buf[i];
-      }
-      sum/=10;
-      if(bsp_ReadLmt70TemperatureInFloat(&temperature,sum)==0){
-          printf("%f",temperature);
-      }
-    /*  //model
+      //model
       rtU.In1 = ch2_data;
       rtU.In2 = data[0];
       rt_OneStep();
-      hr = rtY.Out1;
-      bp = rtY.Out2;
-      pr = rtY.Out3;
-      printf("HR=%d,BP=%d PR=%d",hr,bp,pr);*/
+
+
 
     //simulink
-    //心电信号
+        //心电信号
+//      d1 = (u8*)&ch2_data;
+//      HAL_UART_Transmit(&UART_Handler,d1,4,1000);
 
-   /*   d1 = (u8*)&ch2_data;
-      HAL_UART_Transmit(&UART_Handler,d1,4,1000);
-      //PPG信号
 
-      d1 = (u8*)&data[0];
-      HAL_UART_Transmit(&UART_Handler,d1,4,1000);*/
+//      //PPG信号
+//      d1 = (u8*)&data[0];
+//      HAL_UART_Transmit(&UART_Handler,d1,4,1000);
 
     //加速度信号
     /*  HAL_UART_Transmit(&UART_Handler,&x,2,1000);
       HAL_UART_Transmit(&UART_Handler,&y,2,1000);
       HAL_UART_Transmit(&UART_Handler,&z,2,1000);*/
-      printf("\r\n");
-      HAL_Delay(1000);
-  }
+
+      //LMT70
+      if (i==999) {
+          u32 sum = 0;
+          for (int i = 0; i < 10; ++i) {
+              sum += ad_buf[i];
+          }
+          sum /= 10;
+          bsp_ReadLmt70TemperatureInFloat(&temperature, sum);
+          //Modbus数据
+//      uint16_t Test[3][3]={{76,87,93},{124,121,130},{87,90,89}};
+//      float temperature_test[3] = {36.7f,36.9f,35.5f};
+          Modbus_Write(&T, rtY.Out1, rtY.Out2, rtY.Out3, temperature);
+          HAL_UART_Transmit(&UART_Handler, (uint8_t *) &T, 19, 1000);
+      }
+      i = (++i)%1000;
+//      HAL_Delay(2000);
+    }
   /* USER CODE BEGIN 3 */
 
   /* USER CODE END 3 */
