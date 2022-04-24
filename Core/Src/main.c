@@ -117,9 +117,6 @@ int main(void)
     u8 read_data[9];
     u8 temp[6];
     u32 data[2] ={0};
-    uint16_t hr = 0;
-    uint16_t sbp = 0;
-    uint16_t dbp= 0;
     u16 ad_buf[10];
     float temperature;
   /* USER CODE END 1 */
