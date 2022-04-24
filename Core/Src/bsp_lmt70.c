@@ -2,7 +2,6 @@
  *   Filename:       bsp_lmt70.c
  *   Revised:        All copyrights reserved to Roger-WY.
  *   Revision:       v1.0
- *   Writer:	     Roger-WY.
  *
  *   Description:    LMT70温度传感器驱动（模拟量输出）
  *                   
@@ -49,8 +48,7 @@ void bsp_Lmt70Disable(void)
 * 名    称： bsp_Lmt70Init
 * 功    能： LMT70的初始化
 * 入口参数： 
-* 出口参数： 
-* 作　　者： Roger.WY
+* 出口参数：
 * 创建日期： 2020-09-17
 * 修    改：
 * 修改日期：
@@ -72,7 +70,6 @@ int8_t bsp_Lmt70Init(void)
 * 功    能： 使用两阶传递函数计算温度
 * 入口参数： voltageMv: 采集到的温度的电压值（mv）
 * 出口参数： 温度值
-* 作　　者： Roger.WY
 * 创建日期： 2020-09-17
 * 修    改：
 * 修改日期：
@@ -96,7 +93,6 @@ float bsp_GetTempBySecondOrderTransfer(float voltageMv)
 * 功    能： 使用三阶传递函数计算温度
 * 入口参数： voltageMv: 采集到的温度的电压值（mv）
 * 出口参数： 温度值
-* 作　　者： Roger.WY
 * 创建日期： 2020-09-17
 * 修    改：
 * 修改日期：
@@ -120,7 +116,6 @@ float bsp_GetTempByThirdOrderTransfer(float voltageMv)
 * 功    能： 通过采集到的ADC的值计算温度
 * 入口参数： ADC的值
 * 出口参数： 温度的电压值，单位 mv
-* 作　　者： Roger.WY
 * 创建日期： 2020-09-17
 * 修    改：
 * 修改日期：
@@ -141,7 +136,6 @@ float bsp_AdcToVoltage(uint32_t adcValue)
 * 功    能： 通过采集到的ADC的值计算温度
 * 入口参数： pTemperature:温度值(℃ ) 浮点型 , adcValue:采集到的ADC值
 * 出口参数： 0：读取成功 -1：读取失败
-* 作　　者： Roger.WY
 * 创建日期： 2020-09-17
 * 修    改：
 * 修改日期：
@@ -174,7 +168,6 @@ int8_t bsp_ReadLmt70TemperatureInFloat(float *pTemperature,uint32_t adcValue)
 * 功    能： 通过采集到的ADC的值计算温度
 * 入口参数： pTemperature:温度值(℃ ) 放大10倍后的整型 , adcValue:采集到的ADC值
 * 出口参数： 0：读取成功 -1：读取失败
-* 作　　者： Roger.WY
 * 创建日期： 2020-09-17
 * 修    改：
 * 修改日期：
