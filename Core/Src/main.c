@@ -119,6 +119,7 @@ int main(void)
     u32 data[2] ={0};
     u16 ad_buf[10];
     float temperature;
+    uint32_t in[2][1000];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -151,7 +152,7 @@ int main(void)
     //校准adc
     HAL_ADCEx_Calibration_Start(&hadc1,ADC_SINGLE_ENDED);
   /* USER CODE BEGIN 2 */
-    uart_init(9600);
+    uart_init(115200);
     ADS1292_Init();	// ADS1292R初始化
     ADS1292_PowerOnInit();						 // ADS1292上电初始化
     ADXL345_init();
@@ -167,63 +168,67 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int i = 0;
   while (1)
   {
-    /* USER CODE END WHILE */
-    //ads1292R
-      ch1_data = 0;										 // 通道1数据
-      ch2_data = 0;								 // 通道2数据
-      u8 *d1 = NULL;
-      u8 m = 0;
-      // read_data：24 status bits + 24 bits × 2 channels
-      ADS1292_Read_Data(read_data);
+      for (int j = 0; j < 1000; ++j) {
+          //ads1292R
+          ch1_data = 0;                                         // 通道1数据
+          ch2_data = 0;                                 // 通道2数据
+          u8 *d1 = NULL;
+          u8 m = 0;
+          // read_data：24 status bits + 24 bits × 2 channels
+          ADS1292_Read_Data(read_data);
 
-      // 计算ADS1292R通道1的数据-呼吸测量数据
-      ch1_data |= (uint32_t)read_data[3] << 16;
-      ch1_data |= (uint32_t)read_data[4] << 8;
-      ch1_data |= (uint32_t)read_data[5];
+          // 计算ADS1292R通道1的数据-呼吸测量数据
+          ch1_data |= (uint32_t) read_data[3] << 16;
+          ch1_data |= (uint32_t) read_data[4] << 8;
+          ch1_data |= (uint32_t) read_data[5];
 
-      // 计算ADS1292R通道2的数据-心电图数据
-      ch2_data |= (uint32_t)read_data[6] << 16;
-      ch2_data |= (uint32_t)read_data[7] << 8;
-      ch2_data |= (uint32_t)read_data[8];
+          // 计算ADS1292R通道2的数据-心电图数据
+          ch2_data |= (uint32_t) read_data[6] << 16;
+          ch2_data |= (uint32_t) read_data[7] << 8;
+          ch2_data |= (uint32_t) read_data[8];
 
-      // 得到的数据是补码，需要进行数据转换
-      //      printf("A: %8d,%8d\r\n",ch1_data^0x800000, ch2_data^0x800000);
-      ch1_data^=0x800000;
-      ch2_data^=0x800000;
-      ch2_data&=0xffff;
-
-
-      //呼吸信号
-//      d1 = (u8*)&ch1_data;
-//      HAL_UART_Transmit(&UART_Handler,d1,2,1000);
-//      printf("\r\n");
-
-    //ADXL345
-      /*short x, y, z;
-      ADXL345_read_times(&x, &y, &z, 1); //读出x，y，z方向加速度值*/
-      /*printf("x %d\n", x);
-      printf("y %d\n", y);
-      printf("z %d\n", z);*/
-
-    //max30102
-      while (MAX30102_INT_Read()) ;
-      max30102_FIFO_ReadBytes(REG_FIFO_DATA,temp,6);
-      data[0] = ((temp[0] << 16 | temp[1] << 8 | temp[2]) & 0x03ffff);
-      data[1] = ((temp[3] << 16 | temp[4] << 8 | temp[5]) & 0x03ffff);
-      data[0] = (-data[0])&0xffff;
-//          printf(",%8d,%8d\r\n", (-data[0])&0x03ffff, (-data[1])&0x03ffff);
+          // 得到的数据是补码，需要进行数据转换
+          //      printf("A: %8d,%8d\r\n",ch1_data^0x800000, ch2_data^0x800000);
+          ch1_data ^= 0x800000;
+          ch2_data ^= 0x800000;
+          ch2_data &= 0xffff;
 
 
-      //model
-      rtU.In1 = ch2_data;
-      rtU.In2 = data[0];
-      rt_OneStep();
+          //呼吸信号
+          //      d1 = (u8*)&ch1_data;
+          //      HAL_UART_Transmit(&UART_Handler,d1,2,1000);
+          //      printf("\r\n");
 
+          //ADXL345
+          /*short x, y, z;
+          ADXL345_read_times(&x, &y, &z, 1); //读出x，y，z方向加速度值*/
+          /*printf("x %d\n", x);
+          printf("y %d\n", y);
+          printf("z %d\n", z);*/
 
+          //max30102
+          while (MAX30102_INT_Read());
+          max30102_FIFO_ReadBytes(REG_FIFO_DATA, temp, 6);
+          data[0] = ((temp[0] << 16 | temp[1] << 8 | temp[2]) & 0x03ffff);
+          data[1] = ((temp[3] << 16 | temp[4] << 8 | temp[5]) & 0x03ffff);
+          data[0] = (-data[0]) & 0xffff;
+          //          printf(",%8d,%8d\r\n", (-data[0])&0x03ffff, (-data[1])&0x03ffff);
 
+          //model
+          rtU.In1 = ch2_data;
+          rtU.In2 = data[0];
+          in[0][j] = ch2_data;
+          in[1][j] = data[0];
+          rt_OneStep();
+      }
+
+      for (int i = 0; i < 1000; ++i) {
+          HAL_UART_Transmit(&UART_Handler,(uint8_t*)&in[0][i],4,1000);
+          HAL_UART_Transmit(&UART_Handler,(uint8_t*)&in[1][i],4,1000);
+          printf("\r\n");
+      }
     //simulink
         //心电信号
 //      d1 = (u8*)&ch2_data;
@@ -240,26 +245,33 @@ int main(void)
       HAL_UART_Transmit(&UART_Handler,&z,2,1000);*/
 
       //LMT70
-      if (i==999) {
-          u32 sum = 0;
-          for (int i = 0; i < 10; ++i) {
-              sum += ad_buf[i];
-          }
-          sum /= 10;
-          bsp_ReadLmt70TemperatureInFloat(&temperature, sum);
-          //Modbus数据
+/*      u32 sum = 0;
+      for (int i = 0; i < 10; ++i) {
+          sum += ad_buf[i];
+      }
+      sum /= 10;
+      bsp_ReadLmt70TemperatureInFloat(&temperature, sum);*/
+
+
+
+      //Modbus数据
 //      uint16_t Test[3][3]={{76,87,93},{124,121,130},{87,90,89}};
 //      float temperature_test[3] = {36.7f,36.9f,35.5f};
-          Modbus_Write(&T, rtY.Out1, rtY.Out2, rtY.Out3, temperature);
-          HAL_UART_Transmit(&UART_Handler, (uint8_t *) &T, 19, 1000);
-      }
-      i = (++i)%1000;
-//      HAL_Delay(2000);
+//      Modbus_Write(&T, rtY.Out1, rtY.Out2, rtY.Out3, temperature);
+//      HAL_UART_Transmit(&UART_Handler, (uint8_t *) &T, 19, 1000);
+
+
+
+//      LMS_simu_generate_initialize();
+//      HAL_Delay(1000);
+
     }
   /* USER CODE BEGIN 3 */
 
   /* USER CODE END 3 */
 }
+
+/* USER CODE END WHILE */
 
 /**
   * @brief System Clock Configuration
@@ -618,15 +630,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PC1 */
-  /*GPIO_InitStruct.Pin = GPIO_PIN_1;
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_1,SET);*/
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 PB1 PB12 PB13
-                           PB14 */
+  /*Configure GPIO pins : PA2 PA3 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

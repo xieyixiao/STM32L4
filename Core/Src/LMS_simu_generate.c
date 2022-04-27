@@ -3,9 +3,9 @@
  *
  * Code generated for Simulink model 'LMS_simu_generate'.
  *
- * Model version                  : 1.122
+ * Model version                  : 1.131
  * Simulink Coder version         : 9.0 (R2018b) 24-May-2018
- * C/C++ source code generated on : Sun Apr 24 21:15:05 2022
+ * C/C++ source code generated on : Mon Apr 25 15:26:19 2022
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: STMicroelectronics->STM32 32-bit Cortex-M
@@ -595,7 +595,7 @@ void LMS_simu_generate_step(void)
     rtDW.t_n++;
     rtb_y_h = rtDW.pre_h;
   } else {
-    rtb_y_h = 5555.0 / rtDW.t_n;
+    rtb_y_h = 6000.0 / rtDW.t_n;
     rtDW.pre_h = rtb_y_h;
     rtDW.t_n = 0.0;
   }

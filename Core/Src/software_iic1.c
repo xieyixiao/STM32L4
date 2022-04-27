@@ -3,16 +3,6 @@
 //
 #include "software_iic1.h"
 
-static void delay_us(vu32 u_sec)
-{
-    uint16_t cnt = 0;
-
-    while(u_sec--)
-    {
-        for(cnt=80/5; cnt>0; cnt--);
-    }
-}
-
 void SW_I2C1_Init(void)
 {
     IIC1_GPIO_CLK_ENABLE();

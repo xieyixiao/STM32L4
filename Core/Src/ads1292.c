@@ -118,7 +118,7 @@ void ADS1292_PowerOnInit(void)
   delay_us(10);
   ADS1292_Write_Reg(WREG | LOFF_SENS,0x0F);
   delay_us(10);
-  ADS1292_Write_Reg(WREG | LOFF_STAT,0x40);
+  ADS1292_Write_Reg(WREG | LOFF_STAT,0x00);
   delay_us(10);
   ADS1292_Write_Reg(WREG | RESP1,    0xEA); // ¿ªÆôºôÎü¼ì²â£¨ADS1292RÌØÓÐ£©
   delay_us(10);

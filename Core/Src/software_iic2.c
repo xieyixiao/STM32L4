@@ -3,7 +3,6 @@
 //
 
 #include "software_iic2.h"
-#include "delay.h"
 
 void SW_I2C2_Init(void)
 {

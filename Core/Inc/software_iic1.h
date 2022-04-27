@@ -5,6 +5,7 @@
 #ifndef STM32L4_SOFTWARE_IIC1_H
 #define STM32L4_SOFTWARE_IIC1_H
 #include "stm32l475_user.h"
+#include "delay.h"
 
 
 #define BIT_WRITE	0

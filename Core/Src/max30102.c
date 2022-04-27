@@ -265,7 +265,7 @@ u8 max30102_init(void)
     if (max30102_Bus_Write(REG_FIFO_RD_PTR,0x00)==0) return 1;  	//FIFO_RD_PTR[4:0]
     if (max30102_Bus_Write(REG_FIFO_CONFIG,0x0f)==0) return 1;  	//sample avg = 1, fifo rollover=false, fifo almost full = 17
     if (max30102_Bus_Write(REG_MODE_CONFIG,0x02)==0) return 1;  	//0x02 for Red only, 0x03 for SpO2 mode 0x07 multimode LED
-    if (max30102_Bus_Write(REG_SPO2_CONFIG,0x27)==0) return 1;  	// SPO2_ADC range = 4096nA, SPO2 sample rate (100 Hz), LED pulseWidth (400uS)
+    if (max30102_Bus_Write(REG_SPO2_CONFIG,0x2F)==0) return 1;  	// SPO2_ADC range = 4096nA, SPO2 sample rate (100 Hz), LED pulseWidth (400uS)
     if (max30102_Bus_Write(REG_LED1_PA,0x24)==0) return 1;   	//Choose value for ~ 7mA for LED1
     if (max30102_Bus_Write(REG_LED2_PA,0x00)==0) return 1;   	// Choose value for ~ 7mA for LED2
     return 0;
