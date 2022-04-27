@@ -1,6 +1,8 @@
 #ifndef __MAX30102_H
 #define __MAX30102_H
 #include "stm32l475_user.h"
+#include "delay.h"
+#include "software_iic2.h"
 ////////////////////////////////////////////////////////////////////////////////// 	  
 
 #define MAX30102_INT_PIN GPIO_PIN_14

@@ -2,6 +2,8 @@
 #define __BSP_LMT70_H__
 
 #include <stdint.h>
+#include <math.h>
+#include "stm32l475_user.h"
 
 void bsp_Lmt70Enable(void);
 void bsp_Lmt70Disable(void);

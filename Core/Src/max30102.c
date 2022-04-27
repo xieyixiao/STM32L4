@@ -1,6 +1,4 @@
 #include "max30102.h"
-#include "delay.h"
-#include "software_iic2.h"
 u8 max30102_Bus_Write(u8 Register_Address, u8 Word_Data)
 {
 
