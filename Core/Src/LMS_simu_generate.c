@@ -3,9 +3,9 @@
  *
  * Code generated for Simulink model 'LMS_simu_generate'.
  *
- * Model version                  : 1.131
+ * Model version                  : 1.132
  * Simulink Coder version         : 9.0 (R2018b) 24-May-2018
- * C/C++ source code generated on : Mon Apr 25 15:26:19 2022
+ * C/C++ source code generated on : Wed Apr 27 15:40:08 2022
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: STMicroelectronics->STM32 32-bit Cortex-M
@@ -518,8 +518,8 @@ void LMS_simu_generate_step(void)
   real32_T rtb_DataTypeConversion1;
   real32_T rtb_Sum1;
   real_T rtb_y_h;
-  real32_T rtb_Delay1;
   real32_T rtb_Delay;
+  real32_T rtb_Delay1;
   real32_T rtb_Delay2;
   real32_T rtb_y_d;
   real32_T rtb_y_j;
@@ -710,6 +710,9 @@ void LMS_simu_generate_step(void)
    *  Gain: '<Root>/Gain3'
    */
   rtY.Out3 = (uint16_T)(-0.8571 * rtb_y_h + 108.3);
+
+  /* Outport: '<Root>/Out4' */
+  rtY.Out4 = rtb_Delay;
 
   /* Update for Delay: '<Root>/Delay1' */
   rtDW.Delay1_DSTATE = rtb_Delay;

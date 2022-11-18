@@ -26,7 +26,14 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#pragma pack (1)
+typedef struct test{
+    uint16_t ecg;
+    uint16_t acc;
+    uint16_t ppg;
+    uint8_t c1;
+    uint8_t c2;
+}simu_test;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -45,9 +52,11 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 SPI_HandleTypeDef hspi1;
 Modbus_rtu T;
+Modbus_ecg ecg;
+simu_test simu;
 TIM_HandleTypeDef htim2;
-
 UART_HandleTypeDef huart2;
+
 extern UART_HandleTypeDef UART_Handler;
 
 /* USER CODE BEGIN PV */
@@ -119,16 +128,19 @@ int main(void)
     u32 data[2] ={0};
     u16 ad_buf[10];
     float temperature;
-    uint32_t in[2][1000];
+    float out[2][1000];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-  LMS_simu_generate_initialize();
   /* USER CODE BEGIN Init */
+  LMS_simu_generate_initialize();
   Modbus_Init(&T,0x01,0x44,0x00,0x05,0x0A);
+  Modbus_Init(&ecg,0x01,0x44,0x05,0x02,0x04);
+  simu.c1 = '\r';
+  simu.c2 = '\n';
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -161,7 +173,7 @@ int main(void)
     HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&ad_buf,10);
     while (max30102_init()){
         printf("max30102 inint failed");
-        delay_ms(20);
+        delay_ms(10);
     };
     printf("max30102 inint");
   /* USER CODE END 2 */
@@ -170,15 +182,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      for (int j = 0; j < 1000; ++j) {
+      for (int i = 0; i < 1000;) {
           //ads1292R
           ch1_data = 0;                                         // 通道1数据
           ch2_data = 0;                                 // 通道2数据
-          u8 *d1 = NULL;
-          u8 m = 0;
           // read_data：24 status bits + 24 bits × 2 channels
           ADS1292_Read_Data(read_data);
-
           // 计算ADS1292R通道1的数据-呼吸测量数据
           ch1_data |= (uint32_t) read_data[3] << 16;
           ch1_data |= (uint32_t) read_data[4] << 8;
@@ -194,19 +203,18 @@ int main(void)
           ch1_data ^= 0x800000;
           ch2_data ^= 0x800000;
           ch2_data &= 0xffff;
-
-
+          simu.ecg = ch2_data;
           //呼吸信号
-          //      d1 = (u8*)&ch1_data;
-          //      HAL_UART_Transmit(&UART_Handler,d1,2,1000);
-          //      printf("\r\n");
+//          HAL_UART_Transmit(&UART_Handler,(uint8_t*)&ch1_data,2,1000);
 
           //ADXL345
-          /*short x, y, z;
-          ADXL345_read_times(&x, &y, &z, 1); //读出x，y，z方向加速度值*/
-          /*printf("x %d\n", x);
-          printf("y %d\n", y);
-          printf("z %d\n", z);*/
+          u16 x, y, z;
+          ADXL345_read_times(&x, &y, &z, 1); //读出x，y，z方向加速度值
+          ADXL345_read_XYZ(&x,&y,&z);
+          simu.acc = floor(sqrt(pow(x,2)+pow(y,2)+ pow(z,2)));
+//          printf("x %d\n", x);
+//          printf("y %d\n", y);
+//          printf("z %d\n", z);
 
           //max30102
           while (MAX30102_INT_Read());
@@ -215,51 +223,45 @@ int main(void)
           data[1] = ((temp[3] << 16 | temp[4] << 8 | temp[5]) & 0x03ffff);
           data[0] = (-data[0]) & 0xffff;
           //          printf(",%8d,%8d\r\n", (-data[0])&0x03ffff, (-data[1])&0x03ffff);
-
+          simu.ppg = data[0];
+        //simulink
+      /*  // 心电信号
+        HAL_UART_Transmit(&UART_Handler,(u8*)&ch2_data,4,500);
+        //PPG信号
+        HAL_UART_Transmit(&UART_Handler,(u8*)&data[0],4,500);
+        //加速度信号
+        HAL_UART_Transmit(&UART_Handler,&x,4,500);
+        HAL_UART_Transmit(&UART_Handler,&y,4,500);
+        HAL_UART_Transmit(&UART_Handler,&z,4,500);*/
+        HAL_UART_Transmit(&UART_Handler,(u16*)&simu,8,1000);
           //model
-          rtU.In1 = ch2_data;
+        /*  rtU.In1 = ch2_data;
           rtU.In2 = data[0];
-          in[0][j] = ch2_data;
-          in[1][j] = data[0];
           rt_OneStep();
+          out[0][i] = rtY.Out4;*/
       }
-
-      for (int i = 0; i < 1000; ++i) {
-          HAL_UART_Transmit(&UART_Handler,(uint8_t*)&in[0][i],4,1000);
-          HAL_UART_Transmit(&UART_Handler,(uint8_t*)&in[1][i],4,1000);
-          printf("\r\n");
-      }
-    //simulink
-        //心电信号
-//      d1 = (u8*)&ch2_data;
-//      HAL_UART_Transmit(&UART_Handler,d1,4,1000);
-
-
-//      //PPG信号
-//      d1 = (u8*)&data[0];
-//      HAL_UART_Transmit(&UART_Handler,d1,4,1000);
-
-    //加速度信号
-    /*  HAL_UART_Transmit(&UART_Handler,&x,2,1000);
-      HAL_UART_Transmit(&UART_Handler,&y,2,1000);
-      HAL_UART_Transmit(&UART_Handler,&z,2,1000);*/
-
       //LMT70
-/*      u32 sum = 0;
+    /*  u32 sum = 0;
       for (int i = 0; i < 10; ++i) {
           sum += ad_buf[i];
       }
       sum /= 10;
       bsp_ReadLmt70TemperatureInFloat(&temperature, sum);*/
 
-
-
       //Modbus数据
 //      uint16_t Test[3][3]={{76,87,93},{124,121,130},{87,90,89}};
 //      float temperature_test[3] = {36.7f,36.9f,35.5f};
-//      Modbus_Write(&T, rtY.Out1, rtY.Out2, rtY.Out3, temperature);
-//      HAL_UART_Transmit(&UART_Handler, (uint8_t *) &T, 19, 1000);
 
+    /*  Modbus_Write(&T, rtY.Out1, rtY.Out2, rtY.Out3, temperature);
+      HAL_UART_Transmit(&UART_Handler, (uint8_t *) &T, 19, 1000);
+      delay_ms(1000);
+        //发送心电信号
+      for (int i = 400; i < 600; ++i) {
+          ecg.e = out[0][i];
+          ecg.crc = __SWP16(CRC16_Modbus((uint8_t*)&ecg,11));
+          HAL_UART_Transmit(&UART_Handler, (uint8_t *) &ecg, 13, 1000);
+          delay_ms(1000);
+      }*/
 
 
 //      LMS_simu_generate_initialize();

@@ -3,9 +3,9 @@
  *
  * Code generated for Simulink model 'LMS_simu_generate'.
  *
- * Model version                  : 1.122
+ * Model version                  : 1.132
  * Simulink Coder version         : 9.0 (R2018b) 24-May-2018
- * C/C++ source code generated on : Sun Apr 24 21:15:05 2022
+ * C/C++ source code generated on : Wed Apr 27 15:40:08 2022
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: STMicroelectronics->STM32 32-bit Cortex-M
@@ -161,6 +161,7 @@ typedef struct {
   uint16_T Out1;                       /* '<Root>/Out1' */
   uint16_T Out2;                       /* '<Root>/Out2' */
   uint16_T Out3;                       /* '<Root>/Out3' */
+  real32_T Out4;                       /* '<Root>/Out4' */
 } ExtY;
 
 /* Real-time Model Data Structure */

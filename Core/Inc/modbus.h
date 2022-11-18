@@ -30,6 +30,16 @@ typedef struct H{
     uint16_t crc;
 }Modbus_rtu;
 
+typedef struct ECG{
+    uint8_t id;
+    uint8_t op;
+    uint16_t addr;
+    uint16_t n;
+    uint8_t len;
+    float e;
+    uint16_t crc;
+}Modbus_ecg;
+
 
 void Modbus_Init(Modbus_rtu *M,uint8_t id,uint8_t op,uint16_t addr,uint16_t n,uint8_t len);
 void Modbus_Write(Modbus_rtu *M,uint16_t hr,uint16_t sbp,uint16_t dbp,float temperature);

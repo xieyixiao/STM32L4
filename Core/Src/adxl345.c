@@ -45,7 +45,7 @@ void ADXL345_init()
 
     d = ADXL345_read(DEVICE_ID);
 
-    printf("ADXL345_read %d\n", d);
+    printf("ADXL345_init\r\n");
 
     if(d == 0xE5)
     {
@@ -75,19 +75,9 @@ void ADXL345_read_XYZ(short *x, short *y, short *z)
     for(i = 0; i < 5; i++) //总共6个
     {
         buf[i] = IIC1_Read_Byte(1);
-//      printf("I2C_recv_byte [%d] %d\r\n", i, buf[i]);
-//        if(i == 5)
-//        {
-//            IIC1_NAck();
-//        }
-//        else
-//        {
-//            IIC1_Ack();
-//        }
     }
     buf[5] = IIC1_Read_Byte(0);
     IIC1_Stop();
-
     *x = (short)((buf[1]<<8) + buf[0]);
     *y = (short)((buf[3]<<8) + buf[2]);
     *z = (short)((buf[5]<<8) + buf[4]);

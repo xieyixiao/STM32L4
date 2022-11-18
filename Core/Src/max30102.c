@@ -256,16 +256,16 @@ u8 max30102_init(void)
 //	max30102_Bus_Write(REG_LED1_PA, 0x47); 
 //	max30102_Bus_Write(REG_LED2_PA, 0x47); 
 
-    if (max30102_Bus_Write(REG_INTR_ENABLE_1,0xc0)==0) return 1;	// INTR setting
-    if (max30102_Bus_Write(REG_INTR_ENABLE_2,0x02)==0) return 1;
-    if (max30102_Bus_Write(REG_FIFO_WR_PTR,0x00)==0) return 1;  	//FIFO_WR_PTR[4:0]
-    if (max30102_Bus_Write(REG_OVF_COUNTER,0x00)==0) return 1;  	//OVF_COUNTER[4:0]
-    if (max30102_Bus_Write(REG_FIFO_RD_PTR,0x00)==0) return 1;  	//FIFO_RD_PTR[4:0]
-    if (max30102_Bus_Write(REG_FIFO_CONFIG,0x0f)==0) return 1;  	//sample avg = 1, fifo rollover=false, fifo almost full = 17
-    if (max30102_Bus_Write(REG_MODE_CONFIG,0x02)==0) return 1;  	//0x02 for Red only, 0x03 for SpO2 mode 0x07 multimode LED
-    if (max30102_Bus_Write(REG_SPO2_CONFIG,0x2F)==0) return 1;  	// SPO2_ADC range = 4096nA, SPO2 sample rate (100 Hz), LED pulseWidth (400uS)
-    if (max30102_Bus_Write(REG_LED1_PA,0x24)==0) return 1;   	//Choose value for ~ 7mA for LED1
-    if (max30102_Bus_Write(REG_LED2_PA,0x00)==0) return 1;   	// Choose value for ~ 7mA for LED2
+    max30102_Bus_Write(REG_INTR_ENABLE_1,0xc0);	// INTR setting
+    max30102_Bus_Write(REG_INTR_ENABLE_2,0x02);
+    max30102_Bus_Write(REG_FIFO_WR_PTR,0x00);  	//FIFO_WR_PTR[4:0]
+    max30102_Bus_Write(REG_OVF_COUNTER,0x00);  	//OVF_COUNTER[4:0]
+    max30102_Bus_Write(REG_FIFO_RD_PTR,0x00);  	//FIFO_RD_PTR[4:0]
+    max30102_Bus_Write(REG_FIFO_CONFIG,0x0f);  	//sample avg = 1, fifo rollover=false, fifo almost full = 17
+    max30102_Bus_Write(REG_MODE_CONFIG,0x02);  	//0x02 for Red only, 0x03 for SpO2 mode 0x07 multimode LED
+    max30102_Bus_Write(REG_SPO2_CONFIG,0x27);  	// SPO2_ADC range = 4096nA, SPO2 sample rate (100 Hz), LED pulseWidth (400uS)
+    max30102_Bus_Write(REG_LED1_PA,0x24);   	//Choose value for ~ 7mA for LED1
+    max30102_Bus_Write(REG_LED2_PA,0x00);   	// Choose value for ~ 7mA for LED2
     return 0;
 //    while (max30102_Bus_Write(REG_PILOT_PA,0x7f)==0);   	// Choose value for ~ 25mA for Pilot LED
 //	max30102_Bus_Read(REG_INTR_STATUS_1);
